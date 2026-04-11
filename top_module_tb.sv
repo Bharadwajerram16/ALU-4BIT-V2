@@ -1,10 +1,4 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Author: E.Bharadwaj
-// Create Date: 03.04.2026 19:25:03 
-// Module Name: top_module_tb
-//////////////////////////////////////////////////////////////////////////////////
-
 module top_module_tb();
 reg clk;
 reg rst;
@@ -22,17 +16,61 @@ initial
 begin
 clk=0;
 rst=1;
+a=4'b0000;
+b=4'b0000;
+op=3'b000;
+sel_shift=2'b00;
+mode_shift=2'b00;
 #10 rst=0;
-#10 op=3'b000;a=4'b1010;b=4'b0101;
-#10 op=3'b001;a=4'b1100;b=4'b1010;
-#10 op=3'b010;a=4'b1011;sel_shift=2'b01;mode_shift=2'b00;
-#10 op=3'b010;a=4'b1011;sel_shift=2'b01;mode_shift=2'b01;
-#10 op=3'b010;a=4'b1011;sel_shift=2'b01;mode_shift=2'b10;
-#10 op=3'b011;a=4'b1010;b=4'b0011;
-#10 op=3'b100;a=4'd10;b=4'd3;
-wait(done);
-#10 op=3'b101;a=4'd15;b=4'd4;
-wait(done);
+#10 op=3'b000;a=4'b0000;b=4'b1000;
+#10 a=4'b0001;b=4'b1001;
+#10 a=4'b0010;b=4'b1010;
+#10 a=4'b0011;b=4'b1011;
+#10 a=4'b0100;b=4'b1100;
+#10 a=4'b0101;b=4'b1101;
+#10 a=4'b0110;b=4'b1110;
+#10 a=4'b0111;b=4'b1111;
+#10 op=3'b001;a=4'b0000;b=4'b1000;
+#10 a=4'b0001;b=4'b1001;
+#10 a=4'b0010;b=4'b1010;
+#10 a=4'b0011;b=4'b1011;
+#10 a=4'b0100;b=4'b1100;
+#10 a=4'b0101;b=4'b1101;
+#10 a=4'b0110;b=4'b1110;
+#10 a=4'b0111;b=4'b1111;
+#10 op=3'b010;a=4'b0000;sel_shift=2'b01;mode_shift=2'b00;
+#10 a=4'b0001;sel_shift=2'b01;mode_shift=2'b01;
+#10 a=4'b0010;sel_shift=2'b01;mode_shift=2'b10;
+#10 a=4'b0011;sel_shift=2'b10;mode_shift=2'b00;
+#10 a=4'b0100;sel_shift=2'b10;mode_shift=2'b01;
+#10 a=4'b0101;sel_shift=2'b10;mode_shift=2'b10;
+#10 a=4'b0110;sel_shift=2'b11;mode_shift=2'b00;
+#10 a=4'b0111;sel_shift=2'b11;mode_shift=2'b01;
+#10 op=3'b011;sel_shift=2'b00;mode_shift=2'b00;
+#10 a=4'b0000;b=4'b1000;
+#10 a=4'b0001;b=4'b1001;
+#10 a=4'b0010;b=4'b1010;
+#10 a=4'b0011;b=4'b1011;
+#10 a=4'b0100;b=4'b1100;
+#10 a=4'b0101;b=4'b1101;
+#10 a=4'b0110;b=4'b1110;
+#10 a=4'b0111;b=4'b1111;
+#10 op=3'b100;
+#10 a=4'b0001;b=4'b1000;wait(done);
+#10 a=4'b0010;b=4'b1001;wait(done);
+#10 a=4'b0011;b=4'b1010;wait(done);
+#10 a=4'b0100;b=4'b1011;wait(done);
+#10 a=4'b0101;b=4'b1100;wait(done);
+#10 a=4'b0110;b=4'b1101;wait(done);
+#10 a=4'b0111;b=4'b1110;wait(done);
+#10 op=3'b101;
+#10 a=4'b0001;b=4'b1000;wait(done);
+#10 a=4'b0010;b=4'b1001;wait(done);
+#10 a=4'b0011;b=4'b1010;wait(done);
+#10 a=4'b0100;b=4'b1011;wait(done);
+#10 a=4'b0101;b=4'b1100;wait(done);
+#10 a=4'b0110;b=4'b1101;wait(done);
+#10 a=4'b0111;b=4'b1110;wait(done);
 #10 $stop;
 end
 endmodule
