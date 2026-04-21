@@ -6,12 +6,12 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
+`timescale 1ns / 1ps
 module wallace_multipler(p,a,b);
 input [3:0]a,b;
 output [7:0]p;
 wire [1:12]s,c;
-reg [3:0][3:0]p1;
-integer i,j;
+wire [3:0][3:0]p1;
 assign p1[0][0]=a[0]&b[0];
 assign p1[0][1]=a[0]&b[1];
 assign p1[0][2]=a[0]&b[2];
