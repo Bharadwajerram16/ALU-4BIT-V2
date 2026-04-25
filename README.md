@@ -31,9 +31,9 @@ Inputs: a[3:0], b[3:0], op[2:0], op1[2:0], sel_shift[1:0], mode_shift[1:0], dir,
          ┌──────────────────────────────────────────────────────┐
          │                   top_module                         │
          │                                                      │
-         │  op == 3'b000 / 3'b110 ──► kogge_stone_adder        │
+         │  op == 3'b000 / 3'b110 ──► kogge_stone_adder         │
          │                            (c=1 when op==3'b110)     │
-         │  op == 3'b001           ──► logic_unit  (via op1)   │ ──► result[7:0]
+         │  op == 3'b001           ──► logic_unit  (via op1)    │ ──► result[7:0]
          │  op == 3'b010           ──► barrel_shifter           │ ──► Z, C, S, V
          │  op == 3'b011           ──► wallace_multiplier       │ ──► done
          │  op == 3'b100           ──► non_restoring_divider (Q)│
