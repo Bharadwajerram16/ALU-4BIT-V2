@@ -1,166 +1,166 @@
 <div align="center">
 
 ```
-██████████████████████████████████████████████████████████
-█                                                        █
-█   ██████╗  ██████╗   ██╗████████╗    █████╗ ██╗  ██╗ █
-█   ██╔══██╗██╔════╝   ██║╚══██╔══╝   ██╔══██╗██║  ██║ █
-█   ╚█████╔╝██║  ███╗  ██║   ██║      ███████║██║  ██║ █
-█   ██╔══██╗██║   ██║  ██║   ██║      ██╔══██║██║  ██║ █
-█   ██████╔╝╚██████╔╝  ██║   ██║      ██║  ██║╚█████╔╝ █
-█   ╚═════╝  ╚═════╝   ╚═╝   ╚═╝      ╚═╝  ╚═╝ ╚════╝  █
-█                                                        █
-█          4-Bit Arithmetic Logic Unit — V2              █
-█                                                        █
-██████████████████████████████████████████████████████████
+ _  _      ____  ___  _____      _   _     _   _
+| || |    | __ )|_ _||_   _|    / \ | |   | | | |
+| || |_   |  _ \ | |   | |     / _ \| |   | | | |
+|__   _|  | |_) || |   | |    / ___ \ |___| |_| |
+   |_|    |____/|___|  |_|   /_/   \_\____|\___/
 ```
 
 <br/>
 
-![Language](https://img.shields.io/badge/Language-SystemVerilog-blueviolet?style=for-the-badge&logo=v&logoColor=white)
-![Architecture](https://img.shields.io/badge/Architecture-Parallel_Prefix-informational?style=for-the-badge)
+![Language](https://img.shields.io/badge/Language-SystemVerilog-blueviolet?style=for-the-badge)
+![Adder](https://img.shields.io/badge/Adder-Kogge--Stone-informational?style=for-the-badge)
+![Multiplier](https://img.shields.io/badge/Multiplier-Wallace_Tree-orange?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Complete-success?style=for-the-badge)
-![Operations](https://img.shields.io/badge/Operations-16+-orange?style=for-the-badge)
 
 <br/>
 
-> *A high-performance 4-bit ALU built from the silicon up — featuring a Kogge-Stone adder, Wallace Tree multiplier, and non-restoring divider. Each module is hand-crafted in SystemVerilog with full testbench coverage.*
+> *A 4-bit ALU built in SystemVerilog featuring a Kogge-Stone adder, Wallace Tree multiplier, non-restoring divider, barrel shifter, and logic unit — all integrated under a single clocked top module with full flag generation.*
 
 </div>
 
 ---
 
-## Architecture Overview
+## Architecture
 
 ```
-              ┌────────────────────────────────────────────┐
-              │              top_module.sv                 │
-              │                                            │
-  A[3:0] ───► │  ┌──────────────┐  ┌────────────────────┐ │
-  B[3:0] ───► │  │ Arithmetic   │  │  Logic Unit        │ │ ──► Result[7:0]
-  opcode ───► │  │ ┌──────────┐ │  │  AND / OR / XOR /  │ │
-              │  │ │KS Adder  │ │  │  NOT               │ │ ──► Flags
-              │  │ ├──────────┤ │  └────────────────────┘ │    Z C S V
-              │  │ │Wallace   │ │  ┌────────────────────┐ │
-              │  │ │Multiplier│ │  │  Barrel Shifter    │ │
-              │  │ ├──────────┤ │  │  LSL / LSR / ASR   │ │
-              │  │ │NR Divider│ │  └────────────────────┘ │
-              │  └──────────────┘                          │
-              └────────────────────────────────────────────┘
+Inputs: a[3:0], b[3:0], op[2:0], op1[2:0], sel_shift[1:0], mode_shift[1:0], dir, clk, rst
+
+         ┌──────────────────────────────────────────────────────┐
+         │                   top_module                         │
+         │                                                      │
+         │  op == 3'b000 / 3'b110 ──► kogge_stone_adder        │
+         │                            (c=1 when op==3'b110)     │
+         │  op == 3'b001           ──► logic_unit  (via op1)   │ ──► result[7:0]
+         │  op == 3'b010           ──► barrel_shifter           │ ──► Z, C, S, V
+         │  op == 3'b011           ──► wallace_multiplier       │ ──► done
+         │  op == 3'b100           ──► non_restoring_divider (Q)│
+         │  op == 3'b101           ──► non_restoring_divider (R)│
+         │                                                      │
+         └──────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Modules
+## Opcode Table
 
-| Module | Algorithm | Key Property |
-|---|---|---|
-| `kogge_stone_adder.sv` | Parallel Prefix (Kogge-Stone) | O(log n) depth — fastest carry propagation |
-| `wallace_multiplier.sv` | Wallace Tree + CSA | Reduces partial products in parallel |
-| `non_restoring_divider.sv` | Non-Restoring Division | No correction step needed per iteration |
-| `logic_unit.sv` | Bitwise combinational | AND, OR, XOR, NOT |
-| `barrel_shifter.sv` | Mux-based shift network | LSL, LSR, ASR in a single cycle |
-| `flag_generator.sv` | Combinational logic | Zero, Carry, Sign, Overflow |
-| `top_module.sv` | Structural integration | Connects all units via opcode MUX |
+| `op[2:0]` | Operation | Module | Output |
+|---|---|---|---|
+| `3'b000` | Addition | `kogge_stone_adder` | 4-bit, zero-extended to 8 |
+| `3'b110` | Subtraction | `kogge_stone_adder` (cin=1) | 4-bit, zero-extended to 8 |
+| `3'b001` | Logic operation | `logic_unit` (via `op1`) | 4-bit, zero-extended to 8 |
+| `3'b010` | Shift operation | `barrel_shifter` (via `sel_shift`, `mode_shift`, `dir`) | 4-bit, zero-extended to 8 |
+| `3'b011` | Multiplication | `wallace_multiplier` | Full 8-bit product |
+| `3'b100` | Division — Quotient | `non_restoring_divider` | 4-bit, zero-extended to 8 |
+| `3'b101` | Division — Remainder | `non_restoring_divider` | 4-bit, zero-extended to 8 |
+
+> Subtraction reuses the adder: `c = (op == 3'b110)` drives `cin`, and B is inverted externally, giving A + ~B + 1 = A − B in two's complement.
 
 ---
 
-## Supported Operations
+## Module Reference
 
-### Arithmetic
-| Opcode | Operation | Module |
+| Instance | Module File | Role |
 |---|---|---|
-| `4'b0000` | Addition | Kogge-Stone Adder |
-| `4'b0001` | Subtraction | Kogge-Stone Adder (B inverted + Cin=1) |
-| `4'b0010` | Multiplication | Wallace Tree Multiplier |
-| `4'b0011` | Division | Non-Restoring Divider |
+| `ksa` | `kogge_stone_adder.sv` | Parallel prefix adder — add and subtract |
+| `lu1` | `logic_unit.sv` | Bitwise ops selected by `op1[2:0]` |
+| `sh1` | `barrel_shifter.sv` | Shift controlled by `sel_shift`, `mode_shift`, `dir` |
+| `mul1` | `wallace_multipler.sv` | 4×4 multiplication, full 8-bit result |
+| `div1` | `non_restoring_divider.sv` | Clocked divider — asserts `div_done` on completion |
+| `fg1` | `flag_generator.sv` | Generates Z, C, S, V from `result[3:0]`, `cout`, `cin_msb` |
 
-### Logical
-| Opcode | Operation |
+---
+
+## Port Reference
+
+### Inputs
+
+| Port | Width | Description |
+|---|---|---|
+| `clk` | 1 | Clock — used by the non-restoring divider |
+| `rst` | 1 | Reset — used by the non-restoring divider |
+| `a` | 4 | Operand A |
+| `b` | 4 | Operand B |
+| `op` | 3 | Main operation select |
+| `op1` | 3 | Logic unit sub-operation select |
+| `sel_shift` | 2 | Shift amount |
+| `mode_shift` | 2 | Shift mode |
+| `dir` | 1 | Shift direction |
+
+### Outputs
+
+| Port | Width | Description |
+|---|---|---|
+| `result` | 8 | Operation result |
+| `Z` | 1 | Zero flag |
+| `C` | 1 | Carry flag |
+| `S` | 1 | Sign flag |
+| `V` | 1 | Overflow flag |
+| `done` | 1 | Result valid — always `1` except during division |
+
+---
+
+## Flag Generation
+
+Flags are driven by `flag_generator` using `result[3:0]`, `cout`, and `cin_msb`.
+
+| Flag | Condition |
 |---|---|
-| `4'b0100` | AND |
-| `4'b0101` | OR |
-| `4'b0110` | XOR |
-| `4'b0111` | NOT (on A) |
+| `Z` — Zero | `result[3:0] == 4'b0000` |
+| `C` — Carry | `cout` from the adder |
+| `S` — Sign | `result[3]` |
+| `V` — Overflow | `cout ^ cin_msb` |
 
-### Shift
-| Opcode | Operation |
-|---|---|
-| `4'b1000` | Logical Shift Left |
-| `4'b1001` | Logical Shift Right |
-| `4'b1010` | Arithmetic Shift Right |
+`cin_msb` is computed in the top module as:
 
-### Status Flags
-| Flag | Meaning | Condition |
-|---|---|---|
-| `Z` | Zero | Result == 0 |
-| `C` | Carry | Carry-out from MSB |
-| `S` | Sign | MSB of result is 1 |
-| `V` | Overflow | Signed overflow detected |
+```systemverilog
+assign cin_msb = a[3] ^ (b[3] ^ c) ^ sum[3];
+```
 
 ---
 
-## Design Highlights
+## `done` Signal
 
-### Kogge-Stone Adder
-The adder uses a **parallel prefix** approach. Instead of waiting for carry to ripple bit-by-bit (O(n) delay), it computes all carries simultaneously in O(log n) gate stages — the same architecture used in modern CPUs.
-
-```
-Stage 0:  G0  P0  G1  P1  G2  P2  G3  P3   ← bit-level generate/propagate
-Stage 1:  G0:0    G1:0    G2:1    G3:2       ← prefix combine
-Stage 2:  G0:0    G1:0    G2:0    G3:0       ← all carries ready
-```
-
-### Wallace Tree Multiplier
-Partial products are generated for all bit pairs, then **carry-save adders (CSA)** reduce them to two rows before a final fast adder. This eliminates the sequential addition bottleneck found in array multipliers.
-
-### Non-Restoring Divider
-Each iteration either **adds or subtracts** the divisor based on the partial remainder's sign — no conditional restore step. This leads to a regular, pipeline-friendly hardware structure.
+| `op` | `done` source |
+|---|---|
+| `3'b100` — quotient | `div_done` from `non_restoring_divider` |
+| `3'b101` — remainder | `div_done` from `non_restoring_divider` |
+| All others | Tied to `1'b1` — result is combinational and immediate |
 
 ---
 
 ## Testbenches
 
-Every module ships with a dedicated testbench for isolated verification before top-level integration.
-
-```
-├── kogge_stone_adder_tb.sv    — corner cases: all-zeros, all-ones, carry chains
-├── wallace_multiplier_tb.sv   — full 4×4 product space coverage
-├── non_restoring_divider_tb.sv — includes divide-by-zero and remainder checks
-├── logic_unit_tb.sv           — exhaustive truth table verification
-├── barrel_shifter_tb.sv       — boundary shifts (0, 3, 4 positions)
-└── top_module_tb.sv           — end-to-end opcode sweep with flag checking
-```
+| File | What it tests |
+|---|---|
+| `kogge_stone_adder_tb.sv` | Add, subtract — carry, overflow, zero edge cases |
+| `wallace_multiplier_tb.sv` | Full 4×4 product space |
+| `non_restoring_divider_tb.sv` | Quotient, remainder, `done` timing |
+| `logic_unit_tb.sv` | All `op1` sub-operations |
+| `barrel_shifter_tb.sv` | All shift modes and directions |
+| `top_module_tb.sv` | End-to-end opcode sweep with flag verification |
 
 ---
 
-## Getting Started
+## How to Run
 
-### Clone the Repository
-
-```bash
-git clone https://github.com/Bharadwajerram16/ALU-4BIT-V2.git
-cd ALU-4BIT-V2
+**Vivado**
+```
+1. Create project and add all .sv source files
+2. Set top_module_tb.sv as simulation top
+3. Run Behavioral Simulation
 ```
 
-### Simulate (Vivado)
-
-```bash
-# Add all .sv files to the project
-# Set top_module_tb.sv as the simulation top
-# Run behavioral simulation
-```
-
-### Simulate (ModelSim / QuestaSim)
-
+**ModelSim / QuestaSim**
 ```bash
 vlog *.sv
 vsim top_module_tb
 run -all
 ```
 
-### Simulate (iverilog + GTKWave)
-
+**iverilog + GTKWave**
 ```bash
 iverilog -g2012 -o alu_sim *.sv
 vvp alu_sim
@@ -169,14 +169,14 @@ gtkwave dump.vcd
 
 ---
 
-## Project Structure
+## Repository Structure
 
 ```
 ALU-4BIT-V2/
 │
 ├── src/
 │   ├── kogge_stone_adder.sv
-│   ├── wallace_multiplier.sv
+│   ├── wallace_multipler.sv
 │   ├── non_restoring_divider.sv
 │   ├── logic_unit.sv
 │   ├── barrel_shifter.sv
@@ -198,25 +198,26 @@ ALU-4BIT-V2/
 
 ## What's Next
 
-This ALU is the computational core of a future RISC-V CPU implementation. Planned extensions:
+This ALU is the first major building block toward a RISC-V CPU implementation:
 
-- [ ] Register file (32×32-bit, 2R1W)
+- [ ] Register file — 16×4-bit, 2R1W
 - [ ] Instruction decode unit
-- [ ] Single-cycle RISC-V RV32I datapath
+- [ ] Single-cycle RISC-V datapath
 - [ ] Pipelined execution with hazard detection
 
 ---
 
-## Tools
+## Clone
 
-- **HDL**: SystemVerilog (IEEE 1800-2017)
-- **Simulation**: ModelSim / Vivado / iverilog
-- **Target**: FPGA / ASIC synthesis compatible
+```bash
+git clone https://github.com/Bharadwajerram16/ALU-4BIT-V2.git
+cd ALU-4BIT-V2
+```
 
 ---
 
 <div align="center">
 
-Made with SystemVerilog — ECE @ VNR VJIET
+**Author:** E. Bharadwaj &nbsp;|&nbsp; ECE @ VNR VJIET &nbsp;|&nbsp; April 2026
 
 </div>
